@@ -3,6 +3,7 @@ package edu.uees.testing.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -14,6 +15,8 @@ import edu.uees.testing.domain.EstadoReserva;
 import edu.uees.testing.domain.Reserva;
 import edu.uees.testing.notification.Notificador;
 import edu.uees.testing.repository.ReservaRepository;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -115,5 +118,25 @@ class ReservaServiceConfirmacionTest {
         orden.verify(disponibilidad).estaDisponible(reserva);
         orden.verify(repository).guardar(reserva);
         orden.verify(notificador).enviarConfirmacion(reserva);
+    }
+
+    @Test
+    @DisplayName("CM-05 | La reserva ya está CONFIRMADA en el momento de guardarse")
+    void reservaSeGuardaYaConfirmada() {
+        // Arrange: el Mock del repositorio registra el estado que recibe al guardar
+        when(disponibilidad.estaDisponible(any())).thenReturn(true);
+        List<EstadoReserva> estadoAlGuardar = new ArrayList<>();
+        doAnswer(invocacion -> {
+            Reserva guardada = invocacion.getArgument(0);
+            estadoAlGuardar.add(guardada.getEstado());
+            return null;
+        }).when(repository).guardar(any());
+        Reserva reserva = new Reserva("R-004", "ESTUDIANTE");
+
+        // Act
+        servicio.confirmar(reserva);
+
+        // Assert: se persistió una sola vez y ya confirmada, no PENDIENTE
+        assertEquals(List.of(EstadoReserva.CONFIRMADA), estadoAlGuardar);
     }
 }
