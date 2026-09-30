@@ -184,4 +184,64 @@ class ReservaServiceTest {
         // Assert
         assertEquals(50.9915, total, DELTA);
     }
+
+    // ------------------------------------------------------------------
+    // Ae6 | Casos agregados a partir del análisis de cobertura
+    // (código cubierto por JaCoCo pero sin una aserción que lo proteja)
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("CP-12 | Tipo 'vip' en minúsculas también recibe 15 %")
+    void vipEnMinusculasRecibeDescuento() {
+        // Arrange: la regla compara el tipo sin distinguir mayúsculas
+        String tipo = "vip";
+        double totalBase = 100;
+
+        // Act
+        double total = servicio.calcularTotal(tipo, totalBase);
+
+        // Assert
+        assertEquals(85.0, total, DELTA);
+    }
+
+    @Test
+    @DisplayName("CP-13 | Tipo desconocido no recibe descuento")
+    void tipoDesconocidoNoRecibeDescuento() {
+        // Arrange
+        String tipo = "PREMIUM";
+        double totalBase = 100;
+
+        // Act
+        double total = servicio.calcularTotal(tipo, totalBase);
+
+        // Assert
+        assertEquals(100.0, total, DELTA);
+    }
+
+    @Test
+    @DisplayName("CP-14 | Tipo nulo no lanza excepción y no recibe descuento")
+    void tipoNuloNoRecibeDescuento() {
+        // Arrange
+        String tipo = null;
+        double totalBase = 100;
+
+        // Act
+        double total = servicio.calcularTotal(tipo, totalBase);
+
+        // Assert
+        assertEquals(100.0, total, DELTA);
+    }
+
+    @Test
+    @DisplayName("CP-15 | Horas negativas no permiten cancelar (comportamiento actual)")
+    void horasNegativasNoPermitenCancelar() {
+        // Arrange: valor inválido; hoy el servicio lo trata como "sin anticipación"
+        int horas = -1;
+
+        // Act
+        boolean resultado = servicio.puedeCancelar(horas);
+
+        // Assert
+        assertFalse(resultado);
+    }
 }
